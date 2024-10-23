@@ -1,12 +1,12 @@
 CFLAGS=		-g -Wall -O2 -Wc++-compat #-Wextra
 CPPFLAGS=	-DHAVE_KALLOC
-INCLUDES=
+INCLUDES=   -I ../zlib/zlib-1.2.11
 OBJS=		kthread.o kalloc.o misc.o bseq.o sketch.o sdust.o options.o index.o \
 			lchain.o align.o hit.o seed.o map.o format.o pe.o esterr.o splitidx.o \
 			ksw2_ll_sse.o
 PROG=		minimap2
 PROG_EXTRA=	sdust minimap2-lite
-LIBS=		-lm -lz -lpthread
+LIBS=		-L../zlib/zlib-1.2.11 -lm -lz -lpthread
 
 ifneq ($(aarch64),)
 	arm_neon=1
@@ -41,8 +41,10 @@ endif
 .PHONY:all extra clean depend
 .SUFFIXES:.c .o
 
+# $(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
+# @echo $< -o $@
 .c.o:
-		$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
+	./run.sh $<  $@ "extra"
 
 all:$(PROG)
 
@@ -102,7 +104,8 @@ ksw2_exts2_neon.o:ksw2_exts2_sse.c ksw2.h kalloc.h
 # other non-file targets
 
 clean:
-		rm -fr gmon.out *.o a.out $(PROG) $(PROG_EXTRA) *~ *.a *.dSYM build dist mappy*.so mappy.c python/mappy.c mappy.egg*
+		rm -fr gmon.out *.o a.out $(PROG) $(PROG_EXTRA) *~ *.a *.dSYM build dist mappy*.so mappy.c python/mappy.c mappy.egg* 
+		rm -fr llvm/* assembly/* excec/* injected/*
 
 depend:
 		(LC_ALL=C; export LC_ALL; makedepend -Y -- $(CFLAGS) $(CPPFLAGS) -- *.c)

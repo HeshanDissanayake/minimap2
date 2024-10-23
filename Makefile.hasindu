@@ -1,13 +1,16 @@
-CC=/opt/riscv64_linux/bin/riscv64-unknown-linux-gnu-gcc
+CC=/opt/dev/riscv_linux_rv64g/bin/riscv64-unknown-linux-gnu-gcc
 CFLAGS=		-static -march=rv64gc -mabi=lp64d -g -Wall -O2 -Wc++-compat #-Wextra
 CPPFLAGS=	-DHAVE_KALLOC -DUSE_SIMDE -DSIMDE_ENABLE_NATIVE_ALIASES
-INCLUDES=	-Ilib/simde -I../zlib/zlib-1.2.11
-OBJS=		kthread.o kalloc.o misc.o bseq.o sketch.o sdust.o options.o index.o lchain.o align.o hit.o map.o format.o pe.o seed.o esterr.o splitidx.o \
+INCLUDES+=	-Ilib/simde 
+OBJS=		kthread.o kalloc.o misc.o bseq.o sketch.o sdust.o options.o index.o chain.o align.o hit.o map.o format.o pe.o esterr.o splitidx.o \
 			ksw2_extz2_simde.o ksw2_extd2_simde.o ksw2_exts2_simde.o ksw2_ll_simde.o
 PROG=		minimap2
 PROG_EXTRA=	sdust minimap2-lite
-LIBS+=		-L../zlib/zlib-1.2.11 -lm -lz -lpthread
+LIBS+=		-lm -lz -lpthread
+SSE4=
 
+# pc 000000000008f1ea va/inst 00000000c22026f3 sr 8000000200006020
+# core   0: 0x000000000008f1ea (0xc22026f3) /opt/riscv64_linux/bin/
 
 ifneq ($(arm_neon),) # if arm_neon is defined
 ifeq ($(aarch64),)   #if aarch64 is not defined
@@ -15,6 +18,10 @@ ifeq ($(aarch64),)   #if aarch64 is not defined
 else                 #if aarch64 is defined
 	CFLAGS+=-D_FILE_OFFSET_BITS=64 -fsigned-char
 endif
+endif
+
+ifeq ($(sse2only),) #if sse2only is not defined
+        SSE4+=-D__SSE4_1__
 endif
 
 ifneq ($(asan),)
